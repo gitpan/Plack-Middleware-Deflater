@@ -1,7 +1,7 @@
 package Plack::Middleware::Deflater;
 use strict;
 use 5.008001;
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 use parent qw(Plack::Middleware);
 use Plack::Util::Accessor qw( content_type vary_user_agent);
 
@@ -86,24 +86,31 @@ sub call {
         if ($encoder) {
             $h->set('Content-Encoding' => $encoding);
             $h->remove('Content-Length');
-            my($done, $buf);
+            my $buf;
+            my $state = 0; # 0: start 1: readed first compressed chunk 2: done all
             my $compress = $encoder->(\$buf);
+            my $bodybuf = '';
             return sub {
                 my $chunk = shift;
-                return if $done;
+                return if $state == 2;
                 unless (defined $chunk) {
-                    $done = 1;
+                    $state = 2;
                     $compress->close;
-                    return $buf;
+                    $bodybuf .= $buf if defined $buf;
+                    return $bodybuf;
                 }
                 $compress->print($chunk);
                 if (defined $buf) {
-                    my $body = $buf;
-                    $buf = undef;
-                    return $body;
-                } else {
-                    return '';
+                    $bodybuf .= $buf;
+                    undef $buf;
+                    if ( $state == 0 ) { 
+                        #buffering a first chunk. It contains only the gzip header.
+                        $state = 1;
+                        return '';
+                    }
+                    return substr($bodybuf, 0, length($bodybuf), '');
                 }
+                return '';
             };
         }
     });
