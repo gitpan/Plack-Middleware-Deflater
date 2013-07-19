@@ -4,6 +4,8 @@ author:
   - 'Tatsuhiko Miyagawa'
 build_requires:
   ExtUtils::MakeMaker: 6.59
+  Test::More: 0.96
+  Test::Requires: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.59
 distribution_type: module
@@ -20,12 +22,10 @@ no_index:
     - t
     - xt
 requires:
-  Filter::Util::Call: 0
-  IO::Compress::Deflate: 0
-  IO::Compress::Gzip: 0
+  Compress::Zlib: 0
   Plack: 0
   perl: 5.8.1
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/miyagawa/Plack-Middleware-Deflater.git
-version: 0.09
+version: 0.10
