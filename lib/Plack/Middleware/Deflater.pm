@@ -1,7 +1,7 @@
 package Plack::Middleware::Deflater;
 use strict;
 use 5.008001;
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 use parent qw(Plack::Middleware);
 use Plack::Util::Accessor qw( content_type vary_user_agent);
 use Plack::Util;
@@ -24,6 +24,8 @@ sub call {
 
         # can't operate on Content-Ranges
         return if $env->{HTTP_CONTENT_RANGE};
+
+        return if $env->{"plack.skip-deflater"};
 
         my $h = Plack::Util::headers($res->[1]);
         my $content_type = $h->get('Content-Type') || '';
@@ -246,7 +248,15 @@ Do not apply deflater
 
 Apply deflater only if content_type is "text/html"
 
+=item plack.skip-deflater
+
+Skip all Deflater features
+
 =back
+
+=head2 Compare psgix.no-compress with plack.skip-deflater
+
+If no-compress is true, PM::Deflater skips gzip or deflate. But adds Vary: Accept-Encoding and Vary: User-Agent header. skip-deflater forces to skip all PM::Deflater feature, doesn't allow to add Vary header.
 
 =head1 LICENSE
 
